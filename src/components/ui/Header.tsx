@@ -45,8 +45,8 @@ export function Header({ view, currentData, onNewSearch, onSavedView, onDataUpda
             </button>
           )}
           <button onClick={onNewSearch} className="flex items-center gap-2 hover:opacity-90 transition-opacity">
-            <div className="w-7 h-7 rounded-lg bg-duetto-blue flex items-center justify-center">
-              <Hotel size={16} className="text-white" />
+            <div className="w-7 h-7 rounded-lg bg-duetto-lucent flex items-center justify-center">
+              <Hotel size={16} className="text-duetto-midnight" />
             </div>
             <span className="font-bold text-base tracking-tight">
               Hotel<span className="text-duetto-teal-400">Scout</span>
@@ -104,7 +104,7 @@ export function Header({ view, currentData, onNewSearch, onSavedView, onDataUpda
 
           {/* User */}
           <button className="flex items-center gap-2 px-2.5 py-1.5 rounded-duetto hover:bg-duetto-navy-700 transition-colors">
-            <div className="w-7 h-7 rounded-full bg-duetto-blue-400 flex items-center justify-center text-xs font-bold text-white">
+            <div className="w-7 h-7 rounded-full bg-duetto-lucent flex items-center justify-center text-xs font-bold text-duetto-midnight">
               AG
             </div>
             <span className="text-sm font-medium hidden sm:block">Arturo</span>
