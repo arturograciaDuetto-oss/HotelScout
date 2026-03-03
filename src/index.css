@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Sora', ui-sans-serif, system-ui, sans-serif;
+  }
+
+  body {
+    @apply bg-duetto-gray-50 text-duetto-gray-900 antialiased;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+}
+
+@layer components {
+  /* ── Duetto Card ──────────────────────────────────────── */
+  .card {
+    @apply bg-duetto-white rounded-duetto shadow-duetto border border-duetto-gray-200 overflow-hidden;
+  }
+  .card-header {
+    @apply px-6 py-4 border-b border-duetto-gray-100;
+  }
+  .card-body {
+    @apply px-6 py-5;
+  }
+
+  /* ── Duetto Badge ─────────────────────────────────────── */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+  .badge-blue  { @apply bg-duetto-blue-100 text-duetto-blue; }
+  .badge-teal  { @apply bg-duetto-teal-100 text-duetto-teal; }
+  .badge-amber { @apply bg-duetto-amber-100 text-duetto-amber; }
+  .badge-green { @apply bg-duetto-green-100 text-duetto-green; }
+  .badge-red   { @apply bg-duetto-red-100 text-duetto-red; }
+  .badge-navy  { @apply bg-duetto-navy text-duetto-white; }
+
+  /* ── Duetto Button ────────────────────────────────────── */
+  .btn {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-duetto text-sm font-semibold
+           transition-all duration-150 focus:outline-none focus-visible:ring-2
+           focus-visible:ring-duetto-blue focus-visible:ring-offset-2;
+  }
+  .btn-primary {
+    @apply btn bg-duetto-blue text-duetto-white hover:bg-duetto-blue-600 active:bg-duetto-blue-500;
+  }
+  .btn-secondary {
+    @apply btn bg-duetto-white text-duetto-navy border border-duetto-gray-200
+           hover:bg-duetto-gray-50 hover:border-duetto-gray-300;
+  }
+  .btn-ghost {
+    @apply btn text-duetto-gray-600 hover:bg-duetto-gray-100 hover:text-duetto-navy;
+  }
+
+  /* ── Tab Nav ──────────────────────────────────────────── */
+  .tab-item {
+    @apply flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-lg
+           transition-all duration-150 cursor-pointer;
+  }
+  .tab-item-active {
+    @apply tab-item bg-duetto-blue-50 text-duetto-blue;
+  }
+  .tab-item-inactive {
+    @apply tab-item text-duetto-gray-500 hover:bg-duetto-gray-100 hover:text-duetto-gray-700;
+  }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+}
