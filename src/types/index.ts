@@ -1,134 +1,181 @@
-// ── Company Research ─────────────────────────────────────────────────────────
+// ── Core Company Data ─────────────────────────────────────────────────────────
 
-export interface CompanyOverview {
+export interface Company {
   name: string;
-  description: string;
+  website: string;
   headquarters: string;
-  foundedYear: string;
-  propertyCount: string;
-  segments: string[];
-  geographicFootprint: string;
-  marketPosition: string;
-  recentDevelopments: string;
+  summary: string;
 }
 
-export interface FinancialMetrics {
-  estimatedRevenue: string;
-  recentNews: string;
-  growthTrajectory: string;
-  keyMetrics: string[];
+export interface Portfolio {
+  totalHotels: number | string;
+  totalRooms: number | string;
+  brands: string[];
+  countries: string[];
+  segments: string[];
 }
+
+export interface DuettoAlignment {
+  valueProposition: string;
+  alignment: string;
+}
+
+// ── Tech Stack ────────────────────────────────────────────────────────────────
 
 export interface TechStack {
-  rms: string;
   pms: string;
   crs: string;
-  channelManager: string;
+  rms: string;
   otherTools: string[];
   techMaturity: 'Legacy' | 'Transitioning' | 'Modern';
+  rmsCompetitorBattlecard: string | null;
   notes: string;
 }
 
-export interface IndustryContext {
-  keyTrends: string[];
-  competitiveSet: string[];
-  macroFactors: string[];
+// ── Financials ────────────────────────────────────────────────────────────────
+
+export interface Financials {
+  isPublic: boolean;
+  ticker?: string;
+  stockPrice?: string;
+  exchange?: string;
+  earningsSummary?: string;
+  earningsLink?: string;
+  revenueRange?: string;
 }
 
-export interface CompanyResearch {
-  overview: CompanyOverview;
-  financials: FinancialMetrics;
-  techStack: TechStack;
-  industryContext: IndustryContext;
+// ── Buying Signals ────────────────────────────────────────────────────────────
+
+export type BuyingSignalType =
+  | 'M&A'
+  | 'Leadership Change'
+  | 'Funding'
+  | 'Expansion'
+  | 'Technology'
+  | 'Other';
+
+export interface BuyingSignal {
+  id: string;
+  type: BuyingSignalType;
+  description: string;
+  date?: string;
+  sourceUrl?: string;
+  significance: 'High' | 'Medium' | 'Low';
 }
 
 // ── Stakeholders ──────────────────────────────────────────────────────────────
 
-export type BuyerType = 'Champion' | 'Decision Maker' | 'Influencer' | 'Gatekeeper';
-
 export interface Stakeholder {
+  id: string;
   name: string;
   title: string;
-  department: string;
-  tenure: string;
-  linkedinUrl: string;
-  emailFormat: string;
-  bio: string;
-  publicStatements: string;
-  buyerType: BuyerType;
-  painPoints: string[];
+  location?: string;
+  tenure?: string;
+  linkedinUrl?: string;
+  email?: string;
+  relevanceNote: string;
+  isManuallyAdded?: boolean;
+  isDeparted?: boolean;
 }
 
-// ── News & Content ────────────────────────────────────────────────────────────
-
-export type ContentType = 'Press Release' | 'Podcast' | 'YouTube' | 'LinkedIn' | 'Conference' | 'News Article';
+// ── Content & Hooks ───────────────────────────────────────────────────────────
 
 export interface NewsItem {
+  id: string;
   title: string;
-  type: ContentType;
-  date: string;
   summary: string;
-  outreachHook: string;
+  sourceUrl: string;
+  publishedDate?: string;
   source: string;
 }
 
-// ── Actionable Output ─────────────────────────────────────────────────────────
-
-export interface BuyerPersona {
+export interface MediaItem {
+  id: string;
+  type: 'Podcast' | 'YouTube';
   title: string;
-  profile: string;
-  painPoints: string[];
-  motivations: string[];
-  objections: string[];
-  messagingAngle: string;
+  guestName?: string;
+  description: string;
+  url: string;
+  platform: string;
+  date?: string;
 }
 
-export interface ColdEmail {
-  subject: string;
-  body: string;
-  callToAction: string;
-}
-
-export interface ActionableOutput {
-  strategicHypotheses: string[];
-  buyerPersonas: BuyerPersona[];
-  coldEmail: ColdEmail;
-  linkedinMessage: string;
-  callOpening: string;
+export interface SocialPost {
+  id: string;
+  platform: 'LinkedIn' | 'X' | 'Instagram';
+  content: string;
+  url: string;
+  date?: string;
+  engagement?: string;
 }
 
 // ── Document Analysis ─────────────────────────────────────────────────────────
 
-export interface DocumentAnalysis {
-  fileName: string;
-  fileType: string;
-  kpis: string[];
-  trends: string[];
-  insights: string[];
-  duettoAngle: string;
-  uploadedAt: Date;
+export interface KPIExtract {
+  name: string;
+  value: string;
+  segment?: string;
+  period?: string;
+  type: 'revenue' | 'occupancy' | 'profitability' | 'other';
 }
 
-// ── Dossier ───────────────────────────────────────────────────────────────────
+export interface DocumentAnalysis {
+  id: string;
+  fileName: string;
+  fileType: 'pdf' | 'excel' | 'csv' | 'other';
+  documentType: 'market-report' | 'hotstats' | 'other';
+  uploadedAt: string;
+  kpis: KPIExtract[];
+  trends: string[];
+  executiveSummary: string;
+  duettoAngle: string;
+}
 
-export interface Dossier {
+// ── Persona Modal ─────────────────────────────────────────────────────────────
+
+export interface PersonaAnalysis {
+  professionalSummary: string;
+  recentActivity: string;
+  duettoReasons: string[];
+}
+
+export interface HypothesisChallenge {
+  id: string;
+  challenge: string;
+  duettoSolution: string;
+  conversationStarter: string;
+}
+
+export interface PersonaHypotheses {
+  challenges: HypothesisChallenge[];
+  generalConversationStarters: string[];
+}
+
+export type PitchFocus = 'Profitability' | 'Open Pricing' | 'Automation' | 'Integration';
+
+export interface PersonaPitch {
+  subject: string;
+  body: string;
+}
+
+// ── Root HotelData ────────────────────────────────────────────────────────────
+
+export interface HotelData {
+  id: string;
   query: string;
-  generatedAt: Date;
-  company: CompanyResearch | null;
-  stakeholders: Stakeholder[] | null;
-  newsContent: NewsItem[] | null;
+  generatedAt: string;
+  usedWebSearch: boolean;
+  company: Company;
+  portfolio: Portfolio;
+  duettoAlignment: DuettoAlignment[];
+  techStack: TechStack;
+  financials: Financials;
+  buyingSignals: BuyingSignal[];
+  stakeholders: Stakeholder[];
+  news: NewsItem[];
+  media: MediaItem[];
+  socialPosts: SocialPost[];
   documents: DocumentAnalysis[];
-  actionable: ActionableOutput | null;
-  loading: {
-    company: boolean;
-    stakeholders: boolean;
-    newsContent: boolean;
-    actionable: boolean;
-  };
-  error: {
-    company: string | null;
-    stakeholders: string | null;
-    newsContent: string | null;
-    actionable: string | null;
-  };
+  notes: string;
+  savedAt?: string;
 }

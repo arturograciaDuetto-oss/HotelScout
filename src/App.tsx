@@ -1,156 +1,138 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
+import { Loader2 } from 'lucide-react';
 import { Header } from './components/ui/Header';
 import { SearchHero } from './components/search/SearchHero';
-import { DossierView } from './components/dossier/DossierView';
-import {
-  generateCompanyResearch,
-  generateStakeholders,
-  generateNewsContent,
-  generateActionableOutput,
-} from './lib/anthropic';
-import type { Dossier, DocumentAnalysis } from './types';
+import { DashboardLayout } from './components/dashboard/DashboardLayout';
+import { NotesPanel } from './components/dashboard/NotesPanel';
+import { SavedView } from './components/saved/SavedView';
+import { PersonaModal } from './components/stakeholders/PersonaModal';
+import { generateDossier } from './lib/anthropic';
+import { isSaved } from './lib/storage';
+import type { HotelData, Stakeholder, DocumentAnalysis } from './types';
 
-function emptyDossier(query: string): Dossier {
-  return {
-    query,
-    generatedAt: new Date(),
-    company: null,
-    stakeholders: null,
-    newsContent: null,
-    documents: [],
-    actionable: null,
-    loading: { company: true, stakeholders: true, newsContent: true, actionable: false },
-    error: { company: null, stakeholders: null, newsContent: null, actionable: null },
-  };
-}
+type View = 'search' | 'dossier' | 'saved';
 
 export default function App() {
-  const [dossier, setDossier] = useState<Dossier | null>(null);
-  const [isSearching, setIsSearching] = useState(false);
-
-  const patchDossier = useCallback(
-    (patch: (prev: Dossier) => Dossier) => {
-      setDossier(prev => (prev ? patch(prev) : prev));
-    },
-    []
-  );
-
-  async function runCompanyResearch(query: string) {
-    patchDossier(d => ({ ...d, loading: { ...d.loading, company: true }, error: { ...d.error, company: null } }));
-    try {
-      const company = await generateCompanyResearch(query);
-      patchDossier(d => ({ ...d, company, loading: { ...d.loading, company: false } }));
-    } catch (e) {
-      patchDossier(d => ({
-        ...d,
-        loading: { ...d.loading, company: false },
-        error: { ...d.error, company: e instanceof Error ? e.message : 'Failed to load company research' },
-      }));
-    }
-  }
-
-  async function runStakeholders(query: string) {
-    patchDossier(d => ({ ...d, loading: { ...d.loading, stakeholders: true }, error: { ...d.error, stakeholders: null } }));
-    try {
-      const stakeholders = await generateStakeholders(query);
-      patchDossier(d => ({ ...d, stakeholders, loading: { ...d.loading, stakeholders: false } }));
-    } catch (e) {
-      patchDossier(d => ({
-        ...d,
-        loading: { ...d.loading, stakeholders: false },
-        error: { ...d.error, stakeholders: e instanceof Error ? e.message : 'Failed to load stakeholders' },
-      }));
-    }
-  }
-
-  async function runNewsContent(query: string) {
-    patchDossier(d => ({ ...d, loading: { ...d.loading, newsContent: true }, error: { ...d.error, newsContent: null } }));
-    try {
-      const newsContent = await generateNewsContent(query);
-      patchDossier(d => ({ ...d, newsContent, loading: { ...d.loading, newsContent: false } }));
-    } catch (e) {
-      patchDossier(d => ({
-        ...d,
-        loading: { ...d.loading, newsContent: false },
-        error: { ...d.error, newsContent: e instanceof Error ? e.message : 'Failed to load news' },
-      }));
-    }
-  }
-
-  async function runActionable() {
-    if (!dossier) return;
-    const companyContext = dossier.company
-      ? JSON.stringify({
-          name: dossier.company.overview.name,
-          description: dossier.company.overview.description,
-          rms: dossier.company.techStack.rms,
-          recentDevelopments: dossier.company.overview.recentDevelopments,
-          propertyCount: dossier.company.overview.propertyCount,
-          keyMetrics: dossier.company.financials.keyMetrics,
-        })
-      : dossier.query;
-
-    patchDossier(d => ({ ...d, loading: { ...d.loading, actionable: true }, error: { ...d.error, actionable: null } }));
-    try {
-      const actionable = await generateActionableOutput(dossier.query, companyContext);
-      patchDossier(d => ({ ...d, actionable, loading: { ...d.loading, actionable: false } }));
-    } catch (e) {
-      patchDossier(d => ({
-        ...d,
-        loading: { ...d.loading, actionable: false },
-        error: { ...d.error, actionable: e instanceof Error ? e.message : 'Failed to generate action plan' },
-      }));
-    }
-  }
+  const [view, setView] = useState<View>('search');
+  const [currentData, setCurrentData] = useState<HotelData | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
+  const [personaTarget, setPersonaTarget] = useState<Stakeholder | null>(null);
 
   async function handleSearch(query: string) {
-    setIsSearching(true);
-    const fresh = emptyDossier(query);
-    setDossier(fresh);
-    setIsSearching(false);
-
-    // Run all three research sections in parallel
-    await Promise.all([
-      runCompanyResearch(query),
-      runStakeholders(query),
-      runNewsContent(query),
-    ]);
+    setIsGenerating(true);
+    setGenerateError(null);
+    setView('dossier');
+    setCurrentData(null);
+    try {
+      const data = await generateDossier(query);
+      setCurrentData(data);
+    } catch (e) {
+      setGenerateError(e instanceof Error ? e.message : 'Generation failed. Check your API key.');
+      setView('search');
+    } finally {
+      setIsGenerating(false);
+    }
   }
 
-  function handleNewSearch() {
-    setDossier(null);
+  function handleUpdateStakeholder(updated: Stakeholder) {
+    setCurrentData(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        stakeholders: prev.stakeholders.map(s => s.id === updated.id ? updated : s),
+      };
+    });
+  }
+
+  function handleAddStakeholder(s: Stakeholder) {
+    setCurrentData(prev => prev ? { ...prev, stakeholders: [...prev.stakeholders, s] } : prev);
   }
 
   function handleDocumentAdded(doc: DocumentAnalysis) {
-    patchDossier(d => ({ ...d, documents: [...d.documents, doc] }));
+    setCurrentData(prev => prev ? { ...prev, documents: [...prev.documents, doc] } : prev);
   }
 
-  function handleDocumentRemoved(index: number) {
-    patchDossier(d => ({ ...d, documents: d.documents.filter((_, i) => i !== index) }));
+  function handleDocumentRemoved(id: string) {
+    setCurrentData(prev => prev ? { ...prev, documents: prev.documents.filter(d => d.id !== id) } : prev);
+  }
+
+  function handleNotesChange(notes: string) {
+    setCurrentData(prev => prev ? { ...prev, notes } : prev);
+  }
+
+  function handleOpenSavedProfile(data: HotelData) {
+    setCurrentData(data);
+    setView('dossier');
   }
 
   return (
     <div className="h-screen flex flex-col bg-duetto-gray-50 font-sora overflow-hidden">
       <Header
-        hasDossier={dossier !== null}
-        currentQuery={dossier?.query}
-        onNewSearch={handleNewSearch}
+        view={view}
+        currentData={currentData}
+        onNewSearch={() => { setView('search'); setCurrentData(null); setGenerateError(null); }}
+        onSavedView={() => setView(view === 'saved' ? 'search' : 'saved')}
+        onDataUpdate={setCurrentData}
       />
 
-      {!dossier ? (
-        <SearchHero onSearch={handleSearch} isSearching={isSearching} />
-      ) : (
-        <DossierView
-          dossier={dossier}
-          onRetry={(section) => {
-            if (section === 'company') runCompanyResearch(dossier.query);
-            if (section === 'stakeholders') runStakeholders(dossier.query);
-            if (section === 'news') runNewsContent(dossier.query);
-          }}
-          onGenerateActionable={runActionable}
-          onRetryActionable={runActionable}
-          onDocumentAdded={handleDocumentAdded}
-          onDocumentRemoved={handleDocumentRemoved}
+      {/* Search view */}
+      {view === 'search' && !isGenerating && (
+        <SearchHero onSearch={handleSearch} isSearching={isGenerating} />
+      )}
+
+      {/* Generating overlay */}
+      {view === 'dossier' && isGenerating && (
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 text-duetto-gray-500">
+          <div className="relative">
+            <Loader2 size={40} className="animate-spin text-duetto-blue" />
+          </div>
+          <div className="text-center">
+            <p className="font-semibold text-duetto-navy text-lg mb-1">Researching…</p>
+            <p className="text-duetto-gray-500 text-sm">Using web search to find real-time intelligence</p>
+            <p className="text-duetto-gray-400 text-xs mt-1">This may take 15–30 seconds</p>
+          </div>
+        </div>
+      )}
+
+      {/* Error state */}
+      {generateError && view === 'search' && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-duetto-red text-white px-4 py-3 rounded-duetto shadow-duetto-lg text-sm max-w-md">
+          {generateError}
+        </div>
+      )}
+
+      {/* Dossier view */}
+      {view === 'dossier' && currentData && !isGenerating && (
+        <div className="flex flex-col flex-1 overflow-hidden min-h-0">
+          <DashboardLayout
+            data={currentData}
+            onUpdateStakeholder={handleUpdateStakeholder}
+            onAddStakeholder={handleAddStakeholder}
+            onAnalyzePersona={setPersonaTarget}
+            onDocumentAdded={handleDocumentAdded}
+            onDocumentRemoved={handleDocumentRemoved}
+          />
+          <NotesPanel
+            profileId={currentData.id}
+            notes={currentData.notes}
+            isSaved={isSaved(currentData.id)}
+            onNotesChange={handleNotesChange}
+          />
+        </div>
+      )}
+
+      {/* Saved profiles view */}
+      {view === 'saved' && (
+        <SavedView onOpenProfile={handleOpenSavedProfile} />
+      )}
+
+      {/* Persona Modal */}
+      {personaTarget && currentData && (
+        <PersonaModal
+          stakeholder={personaTarget}
+          hotelData={currentData}
+          onClose={() => setPersonaTarget(null)}
         />
       )}
     </div>
